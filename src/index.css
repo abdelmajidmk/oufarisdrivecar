@@ -1,0 +1,223 @@
+@tailwind base;
+@tailwind components;
+@tailwind utilities;
+
+@import url('https://fonts.googleapis.com/css2?family=Montserrat:wght@300;400;500;600;700;800&family=Playfair+Display:wght@400;500;600;700&display=swap');
+
+@layer base {
+  :root {
+    --background: 210 20% 98%;
+    --foreground: 220 30% 15%;
+
+    --card: 0 0% 100%;
+    --card-foreground: 220 30% 15%;
+
+    --popover: 0 0% 100%;
+    --popover-foreground: 220 30% 15%;
+
+    --primary: 220 60% 20%;
+    --primary-foreground: 45 100% 95%;
+
+    --secondary: 45 90% 55%;
+    --secondary-foreground: 220 60% 15%;
+
+    --muted: 210 15% 92%;
+    --muted-foreground: 220 15% 45%;
+
+    --accent: 45 90% 55%;
+    --accent-foreground: 220 60% 15%;
+
+    --destructive: 0 84.2% 60.2%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 210 20% 88%;
+    --input: 210 20% 88%;
+    --ring: 220 60% 20%;
+
+    --radius: 0.75rem;
+
+    /* Custom tokens */
+    --gold: 45 90% 55%;
+    --gold-light: 45 90% 70%;
+    --navy: 220 60% 20%;
+    --navy-dark: 220 60% 12%;
+    --navy-light: 220 40% 35%;
+
+    /* Gradients */
+    --gradient-hero: linear-gradient(135deg, hsl(220 60% 12%) 0%, hsl(220 60% 25%) 100%);
+    --gradient-gold: linear-gradient(135deg, hsl(45 90% 55%) 0%, hsl(35 90% 50%) 100%);
+    --gradient-card: linear-gradient(180deg, hsl(0 0% 100%) 0%, hsl(210 20% 97%) 100%);
+
+    /* Shadows */
+    --shadow-card: 0 4px 20px -4px hsl(220 60% 20% / 0.1);
+    --shadow-card-hover: 0 12px 40px -8px hsl(220 60% 20% / 0.2);
+    --shadow-gold: 0 4px 20px -4px hsl(45 90% 55% / 0.4);
+  }
+
+  .dark {
+    --background: 220 60% 8%;
+    --foreground: 210 40% 98%;
+
+    --card: 220 60% 12%;
+    --card-foreground: 210 40% 98%;
+
+    --popover: 220 60% 12%;
+    --popover-foreground: 210 40% 98%;
+
+    --primary: 45 90% 55%;
+    --primary-foreground: 220 60% 12%;
+
+    --secondary: 220 40% 25%;
+    --secondary-foreground: 210 40% 98%;
+
+    --muted: 220 40% 20%;
+    --muted-foreground: 210 20% 65%;
+
+    --accent: 45 90% 55%;
+    --accent-foreground: 220 60% 12%;
+
+    --destructive: 0 62.8% 30.6%;
+    --destructive-foreground: 210 40% 98%;
+
+    --border: 220 40% 20%;
+    --input: 220 40% 20%;
+    --ring: 45 90% 55%;
+  }
+}
+
+@layer base {
+  * {
+    @apply border-border;
+  }
+
+  body {
+    @apply bg-background text-foreground font-sans antialiased;
+    font-family: 'Montserrat', sans-serif;
+  }
+
+  h1, h2, h3, h4, h5, h6 {
+    font-family: 'Playfair Display', serif;
+  }
+}
+
+@layer utilities {
+  .text-gradient-gold {
+    background: linear-gradient(135deg, hsl(45 90% 55%) 0%, hsl(35 90% 50%) 100%);
+    -webkit-background-clip: text;
+    -webkit-text-fill-color: transparent;
+    background-clip: text;
+  }
+
+  .bg-hero-gradient {
+    background: var(--gradient-hero);
+  }
+
+  .bg-gold-gradient {
+    background: var(--gradient-gold);
+  }
+
+  .shadow-card {
+    box-shadow: var(--shadow-card);
+  }
+
+  .shadow-card-hover {
+    box-shadow: var(--shadow-card-hover);
+  }
+
+  .shadow-gold {
+    box-shadow: var(--shadow-gold);
+  }
+}
+
+/* Custom animations */
+@keyframes float {
+  0%, 100% { transform: translateY(0px); }
+  50% { transform: translateY(-10px); }
+}
+
+@keyframes shimmer {
+  0% { background-position: -200% 0; }
+  100% { background-position: 200% 0; }
+}
+
+@keyframes fade-in-up {
+  from {
+    opacity: 0;
+    transform: translateY(20px);
+  }
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@keyframes car-bounce {
+  0%, 100% { transform: translateY(0) rotate(0deg); }
+  25% { transform: translateY(-3px) rotate(-1deg); }
+  75% { transform: translateY(-3px) rotate(1deg); }
+}
+
+@keyframes speed-line {
+  0% { opacity: 0; transform: translateX(20px); }
+  50% { opacity: 1; transform: translateX(0); }
+  100% { opacity: 0; transform: translateX(-20px); }
+}
+
+@keyframes road-lines {
+  0% { transform: translateX(0); }
+  100% { transform: translateX(-160px); }
+}
+
+@keyframes loading-bar {
+  0% { width: 0%; }
+  100% { width: 100%; }
+}
+
+@keyframes wheel-spin {
+  from { transform: rotate(0deg); }
+  to { transform: rotate(360deg); }
+}
+
+.animate-float {
+  animation: float 3s ease-in-out infinite;
+}
+
+.animate-shimmer {
+  background: linear-gradient(
+    90deg,
+    hsl(45 90% 55% / 0) 0%,
+    hsl(45 90% 55% / 0.3) 50%,
+    hsl(45 90% 55% / 0) 100%
+  );
+  background-size: 200% 100%;
+  animation: shimmer 2s infinite;
+}
+
+.animate-fade-in-up {
+  animation: fade-in-up 0.6s ease-out forwards;
+}
+
+.animate-car-bounce {
+  animation: car-bounce 0.5s ease-in-out infinite;
+}
+
+.animate-speed-line {
+  animation: speed-line 0.8s ease-in-out infinite;
+}
+
+.animate-road-lines {
+  animation: road-lines 0.5s linear infinite;
+}
+
+.animate-loading-bar {
+  animation: loading-bar 1.5s ease-out forwards;
+}
+
+.animate-wheel-spin {
+  animation: wheel-spin 0.5s linear infinite;
+}
+
+.animation-delay-100 { animation-delay: 0.1s; }
+.animation-delay-200 { animation-delay: 0.2s; }
+.animation-delay-300 { animation-delay: 0.3s; }
+.animation-delay-400 { animation-delay: 0.4s; }
