@@ -44,8 +44,8 @@ const Dashboard = () => {
   });
 
   const handleAddCar = () => {
-    if (!newCar.name || !newCar.pricePerDay) {
-      toast.error("Veuillez remplir les champs obligatoires");
+    if (!newCar.name || !newCar.pricePerDay || !newCar.image) {
+      toast.error("Veuillez remplir les champs obligatoires (Nom, Prix, Image)");
       return;
     }
     const carToAdd = {
@@ -178,8 +178,18 @@ const Dashboard = () => {
                       <Label htmlFor="name">Nom / Modèle</Label>
                       <Input 
                         id="name" 
+                        placeholder="Ex: Hyundai i20"
                         value={newCar.name} 
                         onChange={(e) => setNewCar({...newCar, name: e.target.value})}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="image">URL de l'image</Label>
+                      <Input 
+                        id="image" 
+                        placeholder="Ex: /src/assets/cars/i20.jpg ou URL externe"
+                        value={newCar.image} 
+                        onChange={(e) => setNewCar({...newCar, image: e.target.value})}
                       />
                     </div>
                     <div className="grid grid-cols-2 gap-4">
@@ -254,6 +264,7 @@ const Dashboard = () => {
                 <Table>
                   <TableHeader>
                     <TableRow>
+                      <TableHead>Aperçu</TableHead>
                       <TableHead>Véhicule</TableHead>
                       <TableHead>Catégorie</TableHead>
                       <TableHead>Prix/Jour</TableHead>
@@ -264,6 +275,16 @@ const Dashboard = () => {
                   <TableBody>
                     {cars.map((car) => (
                       <TableRow key={car.id}>
+                        <TableCell>
+                          <img 
+                            src={car.image} 
+                            alt={car.name} 
+                            className="w-12 h-12 object-cover rounded-md"
+                            onError={(e) => {
+                              (e.target as HTMLImageElement).src = '/placeholder.svg';
+                            }}
+                          />
+                        </TableCell>
                         <TableCell className="font-medium">{car.name}</TableCell>
                         <TableCell>
                           <Badge variant="outline">{car.category}</Badge>
@@ -312,6 +333,14 @@ const Dashboard = () => {
                       id="edit-name" 
                       value={editingCar.name} 
                       onChange={(e) => setEditingCar({...editingCar, name: e.target.value})}
+                    />
+                  </div>
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-image">URL de l'image</Label>
+                    <Input 
+                      id="edit-image" 
+                      value={editingCar.image} 
+                      onChange={(e) => setEditingCar({...editingCar, image: e.target.value})}
                     />
                   </div>
                   <div className="grid grid-cols-2 gap-4">
