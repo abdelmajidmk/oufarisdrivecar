@@ -2,14 +2,75 @@ import { useReservations } from '@/hooks/useReservations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Car, TrendingUp, Clock } from 'lucide-react';
+import { CalendarDays, Car as CarIcon, TrendingUp, Clock, Plus, Edit, Trash2 } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
+import { useState } from 'react';
+import { cars as initialCars, type Car } from '@/data/cars';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+  DialogFooter,
+} from "@/components/ui/dialog";
+import { Input } from "@/components/ui/input";
+import { Label } from "@/components/ui/label";
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from "@/components/ui/select";
+import { toast } from "sonner";
 
 const Dashboard = () => {
   const { data: reservations, isLoading, error } = useReservations();
+  const [cars, setCars] = useState<Car[]>(initialCars);
+  const [isAddingCar, setIsAddingCar] = useState(false);
+  const [editingCar, setEditingCar] = useState<Car | null>(null);
+  const [newCar, setNewCar] = useState<Partial<Car>>({
+    name: '',
+    pricePerDay: 0,
+    category: 'economy',
+    seats: 5,
+    transmission: 'Manuelle',
+    fuel: 'Essence',
+    image: '/placeholder.svg'
+  });
+
+  const handleAddCar = () => {
+    if (!newCar.name || !newCar.pricePerDay) {
+      toast.error("Veuillez remplir les champs obligatoires");
+      return;
+    }
+    const carToAdd = {
+      ...newCar,
+      id: Math.random().toString(36).substr(2, 9),
+    } as Car;
+    setCars([...cars, carToAdd]);
+    setIsAddingCar(false);
+    setNewCar({ name: '', pricePerDay: 0, category: 'economy', seats: 5, transmission: 'Manuelle', fuel: 'Essence', image: '/placeholder.svg' });
+    toast.success("Voiture ajoutée avec succès");
+  };
+
+  const handleUpdateCar = () => {
+    if (!editingCar) return;
+    setCars(cars.map(c => c.id === editingCar.id ? editingCar : c));
+    setEditingCar(null);
+    toast.success("Voiture mise à jour avec succès");
+  };
+
+  const handleDeleteCar = (id: string) => {
+    if (confirm("Êtes-vous sûr de vouloir supprimer ce véhicule ?")) {
+      setCars(cars.filter(c => c.id !== id));
+      toast.success("Voiture supprimée avec succès");
+    }
+  };
 
   const todayReservations = reservations?.filter(r => {
     const today = new Date().toDateString();
@@ -33,12 +94,14 @@ const Dashboard = () => {
       <header className="bg-card border-b border-border">
         <div className="container mx-auto px-4 py-4 flex items-center justify-between">
           <div>
-            <h1 className="text-2xl font-bold text-foreground">Dashboard Réservations</h1>
-            <p className="text-muted-foreground text-sm">Gérez vos demandes de réservation</p>
+            <h1 className="text-2xl font-bold text-foreground">Dashboard Administrateur</h1>
+            <p className="text-muted-foreground text-sm">Gérez votre flotte et vos réservations</p>
           </div>
-          <Link to="/">
-            <Button variant="outline">Retour au site</Button>
-          </Link>
+          <div className="flex gap-4">
+            <Link to="/">
+              <Button variant="outline">Retour au site</Button>
+            </Link>
+          </div>
         </div>
       </header>
 
@@ -84,68 +147,262 @@ const Dashboard = () => {
           <Card>
             <CardHeader className="flex flex-row items-center justify-between pb-2">
               <CardTitle className="text-sm font-medium text-muted-foreground">
-                Source
+                Véhicules en Flotte
               </CardTitle>
-              <Car className="h-4 w-4 text-primary" />
+              <CarIcon className="h-4 w-4 text-primary" />
             </CardHeader>
             <CardContent>
-              <Badge variant="secondary">WhatsApp</Badge>
+              <div className="text-3xl font-bold text-foreground">{cars.length}</div>
             </CardContent>
           </Card>
         </div>
 
-        {/* Reservations Table */}
-        <Card>
-          <CardHeader>
-            <CardTitle>Historique des Réservations</CardTitle>
-          </CardHeader>
-          <CardContent>
-            {isLoading ? (
-              <div className="text-center py-8 text-muted-foreground">Chargement...</div>
-            ) : error ? (
-              <div className="text-center py-8 text-destructive">Erreur de chargement</div>
-            ) : reservations?.length === 0 ? (
-              <div className="text-center py-8 text-muted-foreground">
-                Aucune réservation pour le moment
-              </div>
-            ) : (
+        <div className="grid grid-cols-1 gap-8">
+          {/* Fleet Management */}
+          <Card>
+            <CardHeader className="flex flex-row items-center justify-between">
+              <CardTitle>Gestion de la Flotte</CardTitle>
+              <Dialog open={isAddingCar} onOpenChange={setIsAddingCar}>
+                <DialogTrigger asChild>
+                  <Button size="sm">
+                    <Plus className="h-4 w-4 mr-2" />
+                    Ajouter un véhicule
+                  </Button>
+                </DialogTrigger>
+                <DialogContent>
+                  <DialogHeader>
+                    <DialogTitle>Ajouter un nouveau véhicule</DialogTitle>
+                  </DialogHeader>
+                  <div className="grid gap-4 py-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="name">Nom / Modèle</Label>
+                      <Input 
+                        id="name" 
+                        value={newCar.name} 
+                        onChange={(e) => setNewCar({...newCar, name: e.target.value})}
+                      />
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="price">Prix / Jour (DH)</Label>
+                        <Input 
+                          id="price" 
+                          type="number"
+                          value={newCar.pricePerDay} 
+                          onChange={(e) => setNewCar({...newCar, pricePerDay: Number(e.target.value)})}
+                        />
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="category">Catégorie</Label>
+                        <Select 
+                          onValueChange={(value: any) => setNewCar({...newCar, category: value})}
+                          defaultValue={newCar.category}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="economy">Économique</SelectItem>
+                            <SelectItem value="compact">Compacte</SelectItem>
+                            <SelectItem value="suv">SUV</SelectItem>
+                            <SelectItem value="premium">Premium</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                    <div className="grid grid-cols-2 gap-4">
+                      <div className="grid gap-2">
+                        <Label htmlFor="transmission">Transmission</Label>
+                        <Select 
+                          onValueChange={(value: any) => setNewCar({...newCar, transmission: value})}
+                          defaultValue={newCar.transmission}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Manuelle">Manuelle</SelectItem>
+                            <SelectItem value="Automatique">Automatique</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                      <div className="grid gap-2">
+                        <Label htmlFor="fuel">Carburant</Label>
+                        <Select 
+                          onValueChange={(value: any) => setNewCar({...newCar, fuel: value})}
+                          defaultValue={newCar.fuel}
+                        >
+                          <SelectTrigger>
+                            <SelectValue />
+                          </SelectTrigger>
+                          <SelectContent>
+                            <SelectItem value="Essence">Essence</SelectItem>
+                            <SelectItem value="Diesel">Diesel</SelectItem>
+                          </SelectContent>
+                        </Select>
+                      </div>
+                    </div>
+                  </div>
+                  <DialogFooter>
+                    <Button onClick={handleAddCar}>Ajouter</Button>
+                  </DialogFooter>
+                </DialogContent>
+              </Dialog>
+            </CardHeader>
+            <CardContent>
               <div className="overflow-x-auto">
                 <Table>
                   <TableHeader>
                     <TableRow>
-                      <TableHead>Date</TableHead>
-                      <TableHead>Heure</TableHead>
-                      <TableHead>Voiture</TableHead>
+                      <TableHead>Véhicule</TableHead>
                       <TableHead>Catégorie</TableHead>
-                      <TableHead>Source</TableHead>
+                      <TableHead>Prix/Jour</TableHead>
+                      <TableHead>Détails</TableHead>
+                      <TableHead className="text-right">Actions</TableHead>
                     </TableRow>
                   </TableHeader>
                   <TableBody>
-                    {reservations?.map((reservation) => (
-                      <TableRow key={reservation.id}>
+                    {cars.map((car) => (
+                      <TableRow key={car.id}>
+                        <TableCell className="font-medium">{car.name}</TableCell>
                         <TableCell>
-                          {format(new Date(reservation.created_at), 'dd MMM yyyy', { locale: fr })}
+                          <Badge variant="outline">{car.category}</Badge>
                         </TableCell>
-                        <TableCell>
-                          {format(new Date(reservation.created_at), 'HH:mm', { locale: fr })}
+                        <TableCell>{car.pricePerDay} DH</TableCell>
+                        <TableCell className="text-sm text-muted-foreground">
+                          {car.transmission} | {car.fuel}
                         </TableCell>
-                        <TableCell className="font-medium">{reservation.car_name}</TableCell>
-                        <TableCell>
-                          <Badge variant="outline">{reservation.car_category || 'N/A'}</Badge>
-                        </TableCell>
-                        <TableCell>
-                          <Badge className="bg-green-500 hover:bg-green-600">
-                            {reservation.source || 'WhatsApp'}
-                          </Badge>
+                        <TableCell className="text-right">
+                          <div className="flex justify-end gap-2">
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => setEditingCar(car)}
+                            >
+                              <Edit className="h-4 w-4 text-blue-500" />
+                            </Button>
+                            <Button 
+                              variant="ghost" 
+                              size="icon"
+                              onClick={() => handleDeleteCar(car.id)}
+                            >
+                              <Trash2 className="h-4 w-4 text-destructive" />
+                            </Button>
+                          </div>
                         </TableCell>
                       </TableRow>
                     ))}
                   </TableBody>
                 </Table>
               </div>
-            )}
-          </CardContent>
-        </Card>
+            </CardContent>
+          </Card>
+
+          {/* Edit Car Dialog */}
+          <Dialog open={!!editingCar} onOpenChange={(open) => !open && setEditingCar(null)}>
+            <DialogContent>
+              <DialogHeader>
+                <DialogTitle>Modifier le véhicule</DialogTitle>
+              </DialogHeader>
+              {editingCar && (
+                <div className="grid gap-4 py-4">
+                  <div className="grid gap-2">
+                    <Label htmlFor="edit-name">Nom / Modèle</Label>
+                    <Input 
+                      id="edit-name" 
+                      value={editingCar.name} 
+                      onChange={(e) => setEditingCar({...editingCar, name: e.target.value})}
+                    />
+                  </div>
+                  <div className="grid grid-cols-2 gap-4">
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-price">Prix / Jour (DH)</Label>
+                      <Input 
+                        id="edit-price" 
+                        type="number"
+                        value={editingCar.pricePerDay} 
+                        onChange={(e) => setEditingCar({...editingCar, pricePerDay: Number(e.target.value)})}
+                      />
+                    </div>
+                    <div className="grid gap-2">
+                      <Label htmlFor="edit-category">Catégorie</Label>
+                      <Select 
+                        onValueChange={(value: any) => setEditingCar({...editingCar, category: value})}
+                        defaultValue={editingCar.category}
+                      >
+                        <SelectTrigger>
+                          <SelectValue />
+                        </SelectTrigger>
+                        <SelectContent>
+                          <SelectItem value="economy">Économique</SelectItem>
+                          <SelectItem value="compact">Compacte</SelectItem>
+                          <SelectItem value="suv">SUV</SelectItem>
+                          <SelectItem value="premium">Premium</SelectItem>
+                        </SelectContent>
+                      </Select>
+                    </div>
+                  </div>
+                </div>
+              )}
+              <DialogFooter>
+                <Button onClick={handleUpdateCar}>Enregistrer</Button>
+              </DialogFooter>
+            </DialogContent>
+          </Dialog>
+
+          {/* Reservations Table */}
+          <Card>
+            <CardHeader>
+              <CardTitle>Historique des Réservations</CardTitle>
+            </CardHeader>
+            <CardContent>
+              {isLoading ? (
+                <div className="text-center py-8 text-muted-foreground">Chargement...</div>
+              ) : error ? (
+                <div className="text-center py-8 text-destructive">Erreur de chargement</div>
+              ) : reservations?.length === 0 ? (
+                <div className="text-center py-8 text-muted-foreground">
+                  Aucune réservation pour le moment
+                </div>
+              ) : (
+                <div className="overflow-x-auto">
+                  <Table>
+                    <TableHeader>
+                      <TableRow>
+                        <TableHead>Date</TableHead>
+                        <TableHead>Heure</TableHead>
+                        <TableHead>Voiture</TableHead>
+                        <TableHead>Catégorie</TableHead>
+                        <TableHead>Source</TableHead>
+                      </TableRow>
+                    </TableHeader>
+                    <TableBody>
+                      {reservations?.map((reservation) => (
+                        <TableRow key={reservation.id}>
+                          <TableCell>
+                            {format(new Date(reservation.created_at), 'dd MMM yyyy', { locale: fr })}
+                          </TableCell>
+                          <TableCell>
+                            {format(new Date(reservation.created_at), 'HH:mm', { locale: fr })}
+                          </TableCell>
+                          <TableCell className="font-medium">{reservation.car_name}</TableCell>
+                          <TableCell>
+                            <Badge variant="outline">{reservation.car_category || 'N/A'}</Badge>
+                          </TableCell>
+                          <TableCell>
+                            <Badge className="bg-green-500 hover:bg-green-600">
+                              {reservation.source || 'WhatsApp'}
+                            </Badge>
+                          </TableCell>
+                        </TableRow>
+                      ))}
+                    </TableBody>
+                  </Table>
+                </div>
+              )}
+            </CardContent>
+          </Card>
+        </div>
       </main>
     </div>
   );
