@@ -46,4 +46,4 @@ publicDir = "dist"
 [userenv]
 
 [userenv.shared]
-VITE_ADMIN_ACCESS_KEY = "votre_cle_ici"
+VITE_ADMIN_ACCESS_KEY = "Oufaris2030"
