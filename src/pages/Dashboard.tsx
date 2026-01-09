@@ -61,11 +61,8 @@ const Dashboard = () => {
   });
 
   useEffect(() => {
-    const authStatus = sessionStorage.getItem('admin_authenticated');
-    if (authStatus === 'true') {
-      setIsAuthenticated(true);
-    }
-
+    // Authentification is no longer persisted in sessionStorage to force re-entry
+    
     const savedAttempts = localStorage.getItem('admin_attempts');
     if (savedAttempts) setAttempts(parseInt(savedAttempts, 10));
 
@@ -102,18 +99,11 @@ const Dashboard = () => {
       return;
     }
 
-    // Since Vite env vars with VITE_ prefix are only for client-side exposure,
-    // and ADMIN_ACCESS_KEY is a server-side secret, we should use a default if it's not exposed
-    // correctly through the build process. 
-    // IMPORTANT: In Replit, secrets are available as process.env.KEY.
-    // However, in a client-side Vite app, only VITE_ keys are exposed.
-    // For now, we will check against the secret if provided, but warn that it might not be exposed.
-    
     const correctKey = import.meta.env.VITE_ADMIN_ACCESS_KEY || 'admin123';
     
     if (accessKey === correctKey) {
       setIsAuthenticated(true);
-      sessionStorage.setItem('admin_authenticated', 'true');
+      // Removed: sessionStorage.setItem('admin_authenticated', 'true');
       localStorage.removeItem('admin_attempts');
       localStorage.removeItem('admin_blocked_until');
       localStorage.removeItem('admin_block_level');
@@ -292,7 +282,7 @@ const Dashboard = () => {
           </div>
           <div className="flex gap-4">
             <Button variant="ghost" onClick={() => {
-              sessionStorage.removeItem('admin_authenticated');
+              // Removed: sessionStorage.removeItem('admin_authenticated');
               setIsAuthenticated(false);
             }}>Déconnexion</Button>
             <Link to="/">
