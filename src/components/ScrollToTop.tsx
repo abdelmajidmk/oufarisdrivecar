@@ -29,9 +29,9 @@ const ScrollToTop = () => {
 
   return (
     <Button
-      variant="hero"
+      variant="ghost"
       size="icon"
-      className="fixed bottom-6 right-6 z-50 rounded-full w-10 h-10 shadow-2xl animate-fade-in transition-all hover:scale-110"
+      className="fixed bottom-6 right-6 z-50 rounded-full w-10 h-10 shadow-2xl animate-fade-in transition-all hover:scale-110 bg-gradient-to-br from-[#FFD700] to-[#1E3A8A] text-white border-none"
       onClick={scrollToTop}
       aria-label="Remonter en haut"
     >
