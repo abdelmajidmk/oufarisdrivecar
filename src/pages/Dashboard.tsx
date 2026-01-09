@@ -28,12 +28,23 @@ import {
 } from "@/components/ui/select";
 import { toast } from "sonner";
 
+const BLOCK_DURATIONS = [
+  30 * 1000,          // 30s
+  2 * 60 * 1000,      // 2min
+  5 * 60 * 1000,      // 5min
+  15 * 60 * 1000,     // 15min
+  30 * 60 * 1000,     // 30min
+  2 * 60 * 60 * 1000  // 2h
+];
+
 const Dashboard = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [accessKey, setAccessKey] = useState('');
   const [showPassword, setShowPassword] = useState(false);
   const [attempts, setAttempts] = useState(0);
+  const [blockLevel, setBlockLevel] = useState(0);
   const [isBlocked, setIsBlocked] = useState(false);
+  const [timeRemaining, setTimeRemaining] = useState(0);
   
   const { data: reservations, isLoading, error } = useReservations();
   const [cars, setCars] = useState<Car[]>(initialCars);
@@ -55,23 +66,32 @@ const Dashboard = () => {
       setIsAuthenticated(true);
     }
 
-    const blockedUntil = localStorage.getItem('admin_blocked_until');
-    if (blockedUntil) {
-      const blockedTime = parseInt(blockedUntil, 10);
-      if (Date.now() < blockedTime) {
-        setIsBlocked(true);
-        const remainingTime = Math.ceil((blockedTime - Date.now()) / 60000);
-        toast.error(`Accès bloqué. Réessayez dans ${remainingTime} minutes.`);
-      } else {
-        localStorage.removeItem('admin_blocked_until');
-        localStorage.removeItem('admin_attempts');
-      }
-    }
-
     const savedAttempts = localStorage.getItem('admin_attempts');
-    if (savedAttempts) {
-      setAttempts(parseInt(savedAttempts, 10));
-    }
+    if (savedAttempts) setAttempts(parseInt(savedAttempts, 10));
+
+    const savedBlockLevel = localStorage.getItem('admin_block_level');
+    if (savedBlockLevel) setBlockLevel(parseInt(savedBlockLevel, 10));
+
+    const checkBlocking = () => {
+      const blockedUntil = localStorage.getItem('admin_blocked_until');
+      if (blockedUntil) {
+        const blockedTime = parseInt(blockedUntil, 10);
+        if (Date.now() < blockedTime) {
+          setIsBlocked(true);
+          const remaining = Math.ceil((blockedTime - Date.now()) / 1000);
+          setTimeRemaining(remaining);
+        } else {
+          setIsBlocked(false);
+          localStorage.removeItem('admin_blocked_until');
+          setAttempts(0);
+          localStorage.setItem('admin_attempts', '0');
+        }
+      }
+    };
+
+    checkBlocking();
+    const interval = setInterval(checkBlocking, 1000);
+    return () => clearInterval(interval);
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
@@ -89,23 +109,51 @@ const Dashboard = () => {
       sessionStorage.setItem('admin_authenticated', 'true');
       localStorage.removeItem('admin_attempts');
       localStorage.removeItem('admin_blocked_until');
+      localStorage.removeItem('admin_block_level');
       toast.success("Accès autorisé");
     } else {
       const newAttempts = attempts + 1;
       setAttempts(newAttempts);
       localStorage.setItem('admin_attempts', newAttempts.toString());
-      setAccessKey(''); // Clear input on failure as requested
+      setAccessKey('');
       
       if (newAttempts >= 3) {
-        const blockDuration = 15 * 60 * 1000; // 15 minutes
-        const blockUntil = Date.now() + blockDuration;
+        const currentLevel = Math.min(blockLevel, BLOCK_DURATIONS.length - 1);
+        const duration = BLOCK_DURATIONS[currentLevel];
+        const blockUntil = Date.now() + duration;
+        
         setIsBlocked(true);
         localStorage.setItem('admin_blocked_until', blockUntil.toString());
-        toast.error("Trop de tentatives. Accès bloqué pour 15 minutes.");
+        
+        const nextLevel = blockLevel + 1;
+        setBlockLevel(nextLevel);
+        localStorage.setItem('admin_block_level', nextLevel.toString());
+        
+        const timeStr = duration >= 3600000 
+          ? `${Math.round(duration/3600000)}h` 
+          : duration >= 60000 
+            ? `${Math.round(duration/60000)}min` 
+            : `${duration/1000}s`;
+            
+        toast.error(`Trop de tentatives. Accès bloqué pour ${timeStr}.`);
       } else {
         toast.error(`Clé d'accès incorrecte. Tentatives restantes : ${3 - newAttempts}`);
       }
     }
+  };
+
+  const formatTimeRemaining = (seconds: number) => {
+    if (seconds >= 3600) {
+      const h = Math.floor(seconds / 3600);
+      const m = Math.floor((seconds % 3600) / 60);
+      return `${h}h ${m}m`;
+    }
+    if (seconds >= 60) {
+      const m = Math.floor(seconds / 60);
+      const s = seconds % 60;
+      return `${m}m ${s}s`;
+    }
+    return `${seconds}s`;
   };
 
   if (!isAuthenticated) {
@@ -123,11 +171,16 @@ const Dashboard = () => {
             <CardTitle className="text-2xl font-serif">
               {isBlocked ? "Accès Bloqué" : "Espace Sécurisé"}
             </CardTitle>
-            <p className="text-muted-foreground text-sm mt-2">
-              {isBlocked 
-                ? "Trop de tentatives infructueuses. Veuillez patienter avant de réessayer."
-                : "Veuillez saisir votre clé d'accès pour continuer."}
-            </p>
+            <div className="text-muted-foreground text-sm mt-2">
+              {isBlocked ? (
+                <div className="space-y-2">
+                  <p>Trop de tentatives infructueuses.</p>
+                  <p className="font-bold text-gold">Temps restant : {formatTimeRemaining(timeRemaining)}</p>
+                </div>
+              ) : (
+                <p>Veuillez saisir votre clé d'accès pour continuer.</p>
+              )}
+            </div>
           </CardHeader>
           <CardContent>
             {!isBlocked && (
@@ -142,7 +195,6 @@ const Dashboard = () => {
                       value={accessKey}
                       onChange={(e) => setAccessKey(e.target.value)}
                       className="border-gold/20 focus-visible:ring-gold pr-10"
-                      disabled={isBlocked}
                     />
                     <button
                       type="button"
@@ -161,7 +213,6 @@ const Dashboard = () => {
                 <Button 
                   type="submit" 
                   className="w-full bg-gold hover:bg-gold/90 text-primary font-bold shadow-lg"
-                  disabled={isBlocked}
                 >
                   Se connecter
                 </Button>
