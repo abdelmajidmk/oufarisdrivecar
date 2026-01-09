@@ -2,7 +2,7 @@ import { useReservations } from '@/hooks/useReservations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Car as CarIcon, TrendingUp, Clock, Plus, Edit, Trash2, Lock } from 'lucide-react';
+import { CalendarDays, Car as CarIcon, TrendingUp, Clock, Plus, Edit, Trash2, Lock, Eye, EyeOff, AlertCircle } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
@@ -31,6 +31,10 @@ import { toast } from "sonner";
 const Dashboard = () => {
   const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [accessKey, setAccessKey] = useState('');
+  const [showPassword, setShowPassword] = useState(false);
+  const [attempts, setAttempts] = useState(0);
+  const [isBlocked, setIsBlocked] = useState(false);
+  
   const { data: reservations, isLoading, error } = useReservations();
   const [cars, setCars] = useState<Car[]>(initialCars);
   const [isAddingCar, setIsAddingCar] = useState(false);
@@ -50,50 +54,119 @@ const Dashboard = () => {
     if (authStatus === 'true') {
       setIsAuthenticated(true);
     }
+
+    const blockedUntil = localStorage.getItem('admin_blocked_until');
+    if (blockedUntil) {
+      const blockedTime = parseInt(blockedUntil, 10);
+      if (Date.now() < blockedTime) {
+        setIsBlocked(true);
+        const remainingTime = Math.ceil((blockedTime - Date.now()) / 60000);
+        toast.error(`Accès bloqué. Réessayez dans ${remainingTime} minutes.`);
+      } else {
+        localStorage.removeItem('admin_blocked_until');
+        localStorage.removeItem('admin_attempts');
+      }
+    }
+
+    const savedAttempts = localStorage.getItem('admin_attempts');
+    if (savedAttempts) {
+      setAttempts(parseInt(savedAttempts, 10));
+    }
   }, []);
 
   const handleLogin = (e: React.FormEvent) => {
     e.preventDefault();
-    // In a real app, this would be a server-side check.
-    // For this implementation, we use the environment variable via Vite's import.meta.env
-    // or a direct check if exposed. Since we want server-side "feel", we simulate it.
-    if (accessKey === import.meta.env.VITE_ADMIN_ACCESS_KEY || accessKey === 'admin123') {
+    
+    if (isBlocked) {
+      toast.error("Votre accès est temporairement bloqué.");
+      return;
+    }
+
+    const correctKey = import.meta.env.VITE_ADMIN_ACCESS_KEY || 'admin123';
+    
+    if (accessKey === correctKey) {
       setIsAuthenticated(true);
       sessionStorage.setItem('admin_authenticated', 'true');
+      localStorage.removeItem('admin_attempts');
+      localStorage.removeItem('admin_blocked_until');
       toast.success("Accès autorisé");
     } else {
-      toast.error("Clé d'accès incorrecte");
+      const newAttempts = attempts + 1;
+      setAttempts(newAttempts);
+      localStorage.setItem('admin_attempts', newAttempts.toString());
+      setAccessKey(''); // Clear input on failure as requested
+      
+      if (newAttempts >= 3) {
+        const blockDuration = 15 * 60 * 1000; // 15 minutes
+        const blockUntil = Date.now() + blockDuration;
+        setIsBlocked(true);
+        localStorage.setItem('admin_blocked_until', blockUntil.toString());
+        toast.error("Trop de tentatives. Accès bloqué pour 15 minutes.");
+      } else {
+        toast.error(`Clé d'accès incorrecte. Tentatives restantes : ${3 - newAttempts}`);
+      }
     }
   };
 
   if (!isAuthenticated) {
     return (
       <div className="min-h-screen flex items-center justify-center bg-background px-4">
-        <Card className="w-full max-w-md border-gold/20">
+        <Card className="w-full max-w-md border-gold/20 shadow-xl">
           <CardHeader className="text-center">
-            <div className="mx-auto w-12 h-12 bg-gold/10 rounded-full flex items-center justify-center mb-4">
-              <Lock className="h-6 w-6 text-gold" />
+            <div className="mx-auto w-16 h-16 bg-gold/10 rounded-full flex items-center justify-center mb-4 border border-gold/20">
+              {isBlocked ? (
+                <AlertCircle className="h-8 w-8 text-destructive animate-pulse" />
+              ) : (
+                <Lock className="h-8 w-8 text-gold" />
+              )}
             </div>
-            <CardTitle className="text-2xl font-serif">Espace Sécurisé</CardTitle>
-            <p className="text-muted-foreground text-sm">Veuillez saisir votre clé d'accès pour continuer</p>
+            <CardTitle className="text-2xl font-serif">
+              {isBlocked ? "Accès Bloqué" : "Espace Sécurisé"}
+            </CardTitle>
+            <p className="text-muted-foreground text-sm mt-2">
+              {isBlocked 
+                ? "Trop de tentatives infructueuses. Veuillez patienter avant de réessayer."
+                : "Veuillez saisir votre clé d'accès pour continuer."}
+            </p>
           </CardHeader>
           <CardContent>
-            <form onSubmit={handleLogin} className="space-y-4">
-              <div className="space-y-2">
-                <Label htmlFor="accessKey">Clé d'accès</Label>
-                <Input
-                  id="accessKey"
-                  type="password"
-                  placeholder="••••••••"
-                  value={accessKey}
-                  onChange={(e) => setAccessKey(e.target.value)}
-                  className="border-gold/20 focus-visible:ring-gold"
-                />
-              </div>
-              <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-primary">
-                Se connecter
-              </Button>
-            </form>
+            {!isBlocked && (
+              <form onSubmit={handleLogin} className="space-y-4">
+                <div className="space-y-2">
+                  <Label htmlFor="accessKey">Clé d'accès</Label>
+                  <div className="relative">
+                    <Input
+                      id="accessKey"
+                      type={showPassword ? "text" : "password"}
+                      placeholder="••••••••"
+                      value={accessKey}
+                      onChange={(e) => setAccessKey(e.target.value)}
+                      className="border-gold/20 focus-visible:ring-gold pr-10"
+                      disabled={isBlocked}
+                    />
+                    <button
+                      type="button"
+                      onClick={() => setShowPassword(!showPassword)}
+                      className="absolute right-3 top-1/2 -translate-y-1/2 text-muted-foreground hover:text-gold transition-colors"
+                    >
+                      {showPassword ? <EyeOff className="h-4 w-4" /> : <Eye className="h-4 w-4" />}
+                    </button>
+                  </div>
+                  {attempts > 0 && (
+                    <p className="text-xs text-destructive font-medium">
+                      Tentatives : {attempts}/3
+                    </p>
+                  )}
+                </div>
+                <Button 
+                  type="submit" 
+                  className="w-full bg-gold hover:bg-gold/90 text-primary font-bold shadow-lg"
+                  disabled={isBlocked}
+                >
+                  Se connecter
+                </Button>
+              </form>
+            )}
           </CardContent>
           <div className="p-4 text-center border-t border-border">
             <Link to="/" className="text-sm text-muted-foreground hover:text-gold transition-colors">
