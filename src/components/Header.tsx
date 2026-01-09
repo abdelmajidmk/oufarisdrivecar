@@ -2,6 +2,7 @@ import { Phone, Instagram, MessageCircle, MapPin } from 'lucide-react';
 import { Button } from '@/components/ui/button';
 import { PHONE_NUMBER, INSTAGRAM_URL, WHATSAPP_URL, LOCATION_URL, LOCATION_ADDRESS } from '@/data/cars';
 import carLogo from '@/assets/car-logo.png';
+import { Link } from 'react-router-dom';
 
 const Header = () => {
   return (
@@ -26,17 +27,17 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <a href="/" className="flex items-center gap-3">
+          <Link to="/dashboard" className="flex items-center gap-3 group">
             <img 
               src={carLogo} 
               alt="Ou Faris Drive Car Logo" 
-              className="w-12 h-12 rounded-full object-cover border-2 border-gold/30"
+              className="w-12 h-12 rounded-full object-cover border-2 border-gold/30 group-hover:border-gold transition-all"
             />
             <div className="hidden sm:block">
               <h1 className="font-serif text-xl font-bold text-primary-foreground">Ou Faris</h1>
               <p className="text-xs text-gold font-medium tracking-widest uppercase">Drive Car</p>
             </div>
-          </a>
+          </Link>
 
           {/* Navigation */}
           <nav className="hidden md:flex items-center gap-8">

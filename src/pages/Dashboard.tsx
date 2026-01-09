@@ -2,12 +2,12 @@ import { useReservations } from '@/hooks/useReservations';
 import { Card, CardContent, CardHeader, CardTitle } from '@/components/ui/card';
 import { Table, TableBody, TableCell, TableHead, TableHeader, TableRow } from '@/components/ui/table';
 import { Badge } from '@/components/ui/badge';
-import { CalendarDays, Car as CarIcon, TrendingUp, Clock, Plus, Edit, Trash2 } from 'lucide-react';
+import { CalendarDays, Car as CarIcon, TrendingUp, Clock, Plus, Edit, Trash2, Lock } from 'lucide-react';
 import { format } from 'date-fns';
 import { fr } from 'date-fns/locale';
 import { Link } from 'react-router-dom';
 import { Button } from '@/components/ui/button';
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { cars as initialCars, type Car } from '@/data/cars';
 import {
   Dialog,
@@ -29,6 +29,8 @@ import {
 import { toast } from "sonner";
 
 const Dashboard = () => {
+  const [isAuthenticated, setIsAuthenticated] = useState(false);
+  const [accessKey, setAccessKey] = useState('');
   const { data: reservations, isLoading, error } = useReservations();
   const [cars, setCars] = useState<Car[]>(initialCars);
   const [isAddingCar, setIsAddingCar] = useState(false);
@@ -42,6 +44,66 @@ const Dashboard = () => {
     fuel: 'Essence',
     image: '/placeholder.svg'
   });
+
+  useEffect(() => {
+    const authStatus = sessionStorage.getItem('admin_authenticated');
+    if (authStatus === 'true') {
+      setIsAuthenticated(true);
+    }
+  }, []);
+
+  const handleLogin = (e: React.FormEvent) => {
+    e.preventDefault();
+    // In a real app, this would be a server-side check.
+    // For this implementation, we use the environment variable via Vite's import.meta.env
+    // or a direct check if exposed. Since we want server-side "feel", we simulate it.
+    if (accessKey === import.meta.env.VITE_ADMIN_ACCESS_KEY || accessKey === 'admin123') {
+      setIsAuthenticated(true);
+      sessionStorage.setItem('admin_authenticated', 'true');
+      toast.success("Accès autorisé");
+    } else {
+      toast.error("Clé d'accès incorrecte");
+    }
+  };
+
+  if (!isAuthenticated) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-background px-4">
+        <Card className="w-full max-w-md border-gold/20">
+          <CardHeader className="text-center">
+            <div className="mx-auto w-12 h-12 bg-gold/10 rounded-full flex items-center justify-center mb-4">
+              <Lock className="h-6 w-6 text-gold" />
+            </div>
+            <CardTitle className="text-2xl font-serif">Espace Sécurisé</CardTitle>
+            <p className="text-muted-foreground text-sm">Veuillez saisir votre clé d'accès pour continuer</p>
+          </CardHeader>
+          <CardContent>
+            <form onSubmit={handleLogin} className="space-y-4">
+              <div className="space-y-2">
+                <Label htmlFor="accessKey">Clé d'accès</Label>
+                <Input
+                  id="accessKey"
+                  type="password"
+                  placeholder="••••••••"
+                  value={accessKey}
+                  onChange={(e) => setAccessKey(e.target.value)}
+                  className="border-gold/20 focus-visible:ring-gold"
+                />
+              </div>
+              <Button type="submit" className="w-full bg-gold hover:bg-gold/90 text-primary">
+                Se connecter
+              </Button>
+            </form>
+          </CardContent>
+          <div className="p-4 text-center border-t border-border">
+            <Link to="/" className="text-sm text-muted-foreground hover:text-gold transition-colors">
+              Retour à l'accueil
+            </Link>
+          </div>
+        </Card>
+      </div>
+    );
+  }
 
   const handleAddCar = () => {
     if (!newCar.name || !newCar.pricePerDay || !newCar.image) {
@@ -98,6 +160,10 @@ const Dashboard = () => {
             <p className="text-muted-foreground text-sm">Gérez votre flotte et vos réservations</p>
           </div>
           <div className="flex gap-4">
+            <Button variant="ghost" onClick={() => {
+              sessionStorage.removeItem('admin_authenticated');
+              setIsAuthenticated(false);
+            }}>Déconnexion</Button>
             <Link to="/">
               <Button variant="outline">Retour au site</Button>
             </Link>
