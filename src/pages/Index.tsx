@@ -8,6 +8,7 @@ import About from '@/components/About';
 import Contact from '@/components/Contact';
 import Footer from '@/components/Footer';
 import SplashScreen from '@/components/SplashScreen';
+import ScrollToTop from '@/components/ScrollToTop';
 
 const Index = () => {
   const [showSplash, setShowSplash] = useState(true);
@@ -39,6 +40,7 @@ const Index = () => {
           <Contact />
         </main>
         <Footer />
+        <ScrollToTop />
       </div>
     </>
   );
