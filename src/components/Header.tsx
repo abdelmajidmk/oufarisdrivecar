@@ -27,11 +27,11 @@ const Header = () => {
       <div className="container mx-auto px-4 py-4">
         <div className="flex items-center justify-between">
           {/* Logo */}
-          <Link to="/dashboard" className="flex items-center gap-3 group">
+          <Link to="/" className="flex items-center gap-3">
             <img 
               src={carLogo} 
               alt="Ou Faris Drive Car Logo" 
-              className="w-12 h-12 rounded-full object-cover border-2 border-gold/30 group-hover:border-gold transition-all"
+              className="w-12 h-12 rounded-full object-cover border-2 border-gold/30"
             />
             <div className="hidden sm:block">
               <h1 className="font-serif text-xl font-bold text-primary-foreground">Ou Faris</h1>

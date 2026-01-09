@@ -1,6 +1,7 @@
 import { Phone, Instagram, MapPin } from 'lucide-react';
 import { PHONE_NUMBER, INSTAGRAM_URL, LOCATION_URL } from '@/data/cars';
 import carLogo from '@/assets/car-logo.png';
+import { Link } from 'react-router-dom';
 
 const Footer = () => {
   const currentYear = new Date().getFullYear();
@@ -10,17 +11,17 @@ const Footer = () => {
       <div className="container mx-auto px-4">
         <div className="flex flex-col md:flex-row items-center justify-between gap-8">
           {/* Logo */}
-          <div className="flex items-center gap-3">
+          <Link to="/dashboard" className="flex items-center gap-3 group">
             <img 
               src={carLogo} 
               alt="Ou Faris Drive Car Logo" 
-              className="w-10 h-10 rounded-full object-cover border-2 border-gold/30"
+              className="w-10 h-10 rounded-full object-cover border-2 border-gold/30 group-hover:border-gold transition-all"
             />
             <div>
               <h3 className="font-serif text-lg font-bold text-primary-foreground">Ou Faris Drive Car</h3>
               <p className="text-xs text-primary-foreground/50">Location de voitures au Maroc</p>
             </div>
-          </div>
+          </Link>
 
           {/* Links */}
           <nav className="flex items-center gap-8">
