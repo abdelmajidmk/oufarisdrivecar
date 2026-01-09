@@ -8,10 +8,10 @@ const SplashScreen = ({ onComplete }: SplashScreenProps) => {
   const [phase, setPhase] = useState<'initial' | 'logo' | 'text' | 'exit'>('initial');
 
   useEffect(() => {
-    const timer1 = setTimeout(() => setPhase('logo'), 100);
-    const timer2 = setTimeout(() => setPhase('text'), 600);
-    const timer3 = setTimeout(() => setPhase('exit'), 2000);
-    const timer4 = setTimeout(onComplete, 2500);
+    const timer1 = setTimeout(() => setPhase('logo'), 50);
+    const timer2 = setTimeout(() => setPhase('text'), 400);
+    const timer3 = setTimeout(() => setPhase('exit'), 1600);
+    const timer4 = setTimeout(onComplete, 2000);
 
     return () => {
       clearTimeout(timer1);
