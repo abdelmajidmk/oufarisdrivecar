@@ -192,6 +192,9 @@ const Dashboard = () => {
                       value={accessKey}
                       onChange={(e) => setAccessKey(e.target.value)}
                       className="border-gold/20 focus-visible:ring-gold pr-10"
+                      autoComplete="off"
+                      data-1p-ignore
+                      data-lpignore="true"
                     />
                     <button
                       type="button"
