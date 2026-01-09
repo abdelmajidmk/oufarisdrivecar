@@ -271,6 +271,14 @@ const Dashboard = () => {
     ? Object.entries(popularCar).sort((a, b) => b[1] - a[1])[0]?.[0] 
     : 'N/A';
 
+  const handleLogout = () => {
+    setIsAuthenticated(false);
+    setAccessKey('');
+    setAttempts(0);
+    localStorage.setItem('admin_attempts', '0');
+    // We keep blockLevel and blockedUntil to prevent immediate retry if they were already blocked
+  };
+
   return (
     <div className="min-h-screen bg-background">
       {/* Header */}
@@ -281,10 +289,7 @@ const Dashboard = () => {
             <p className="text-muted-foreground text-sm">Gérez votre flotte et vos réservations</p>
           </div>
           <div className="flex gap-4">
-            <Button variant="ghost" onClick={() => {
-              // Removed: sessionStorage.removeItem('admin_authenticated');
-              setIsAuthenticated(false);
-            }}>Déconnexion</Button>
+            <Button variant="ghost" onClick={handleLogout}>Déconnexion</Button>
             <Link to="/">
               <Button variant="outline">Retour au site</Button>
             </Link>
