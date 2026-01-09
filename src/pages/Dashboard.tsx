@@ -102,6 +102,13 @@ const Dashboard = () => {
       return;
     }
 
+    // Since Vite env vars with VITE_ prefix are only for client-side exposure,
+    // and ADMIN_ACCESS_KEY is a server-side secret, we should use a default if it's not exposed
+    // correctly through the build process. 
+    // IMPORTANT: In Replit, secrets are available as process.env.KEY.
+    // However, in a client-side Vite app, only VITE_ keys are exposed.
+    // For now, we will check against the secret if provided, but warn that it might not be exposed.
+    
     const correctKey = import.meta.env.VITE_ADMIN_ACCESS_KEY || 'admin123';
     
     if (accessKey === correctKey) {

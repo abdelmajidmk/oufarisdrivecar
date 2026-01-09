@@ -42,3 +42,8 @@ deploymentTarget = "static"
 run = ["npm", "run", "preview"]
 build = ["npm", "run", "build:dev"]
 publicDir = "dist"
+
+[userenv]
+
+[userenv.shared]
+VITE_ADMIN_ACCESS_KEY = "votre_cle_ici"
