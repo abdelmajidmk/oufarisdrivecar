@@ -31,11 +31,11 @@ const ScrollToTop = () => {
     <Button
       variant="hero"
       size="icon"
-      className="fixed bottom-6 right-6 z-50 rounded-full w-12 h-12 shadow-2xl animate-fade-in transition-all hover:scale-110"
+      className="fixed bottom-6 right-6 z-50 rounded-full w-10 h-10 shadow-2xl animate-fade-in transition-all hover:scale-110"
       onClick={scrollToTop}
       aria-label="Remonter en haut"
     >
-      <ArrowUp className="h-6 w-6" />
+      <ArrowUp className="h-5 w-5" />
     </Button>
   );
 };
